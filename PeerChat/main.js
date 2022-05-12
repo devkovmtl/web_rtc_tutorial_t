@@ -5,6 +5,14 @@ let uid = String(Math.floor(Math.random() * 100000)); // uid for user
 let client;
 let channel;
 
+let queryString = window.location.search;
+let urlParams = new URLSearchParams(queryString);
+// from params
+let roomId = urlParams.get('room');
+if (!roomId) {
+  window.location = 'lobby.html';
+}
+
 let localStream; // local stream and microphone
 let remoteStream; // remote stream and speakers
 let peerConnection;
@@ -22,7 +30,7 @@ let init = async () => {
   client = await AgoraRTM.createInstance(APP_ID);
   await client.login({ uid, token });
   // roomID comes from the url ?room=
-  channel = client.createChannel('main');
+  channel = client.createChannel(roomId);
   await channel.join();
 
   channel.on('MemberJoined', handleUserJoined);
