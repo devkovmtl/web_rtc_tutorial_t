@@ -26,6 +26,7 @@ let init = async () => {
   await channel.join();
 
   channel.on('MemberJoined', handleUserJoined);
+  channel.on('MemberLeft', handleUserLeft);
 
   client.on('MessageFromPeer', handleMessageFromPeer);
 
@@ -38,9 +39,26 @@ let init = async () => {
   document.getElementById('user-1').srcObject = localStream;
 };
 
+let handleUserLeft = (MemberId) => {
+  document.getElementById('user-2').style.display = 'none';
+};
+
 let handleMessageFromPeer = async (message, MemberId) => {
   // console.log('Message: ', message);
   message = JSON.parse(message);
+  if (message.type === 'offer') {
+    // create an answer
+    await createAnswer(MemberId, message.offer);
+  }
+  if (message.type === 'answer') {
+    addAnswer(MemberId, message.answer);
+  }
+
+  if (message.type === 'candidate') {
+    if (peerConnection) {
+      peerConnection.addIceCandidate(message.candidate);
+    }
+  }
 };
 
 // user joined
@@ -50,11 +68,12 @@ let handleUserJoined = async (MemberId) => {
   createOffer(MemberId);
 };
 
-let createOffer = async (MemberId) => {
+let createPeerConnection = async (MemberId) => {
   // interface that store all informations between us and remote peer
   peerConnection = new RTCPeerConnection(servers);
   remoteStream = new MediaStream();
-  document.getElementById('user-1').srcObject = remoteStream;
+  document.getElementById('user-2').srcObject = remoteStream;
+  document.getElementById('user-2').style.display = 'block';
   if (!localStream) {
     // Get local Stream
     localStream = await navigator.mediaDevices.getUserMedia({
@@ -92,6 +111,52 @@ let createOffer = async (MemberId) => {
       );
     }
   };
+};
+
+let createOffer = async (MemberId) => {
+  //   // interface that store all informations between us and remote peer
+  //   peerConnection = new RTCPeerConnection(servers);
+  //   remoteStream = new MediaStream();
+  //   document.getElementById('user-1').srcObject = remoteStream;
+  //   if (!localStream) {
+  //     // Get local Stream
+  //     localStream = await navigator.mediaDevices.getUserMedia({
+  //       audio: true,
+  //       video: true,
+  //     });
+  //     // append the stream to video
+  //     document.getElementById('user-1').srcObject = localStream;
+  //   }
+
+  //   // take local stream add to peer connection
+  //   localStream.getTracks().forEach((track) => {
+  //     peerConnection.addTrack(track, localStream);
+  //   });
+
+  //   // listen for when our peer has track too
+  //   peerConnection.ontrack = (event) => {
+  //     event.streams[0].getTracks().forEach((track) => {
+  //       remoteStream.addTrack(track);
+  //     });
+  //   };
+
+  //   // listen of when ice candidate is generated
+  //   peerConnection.onicecandidate = async (event) => {
+  //     if (event.candidate) {
+  //       //   console.log('New ICE candidate ', event.candidate);
+  //       client.sendMessageToPeer(
+  //         {
+  //           text: JSON.stringify({
+  //             type: 'candidate',
+  //             candidate: event.candidate,
+  //           }),
+  //         },
+  //         MemberId
+  //       );
+  //     }
+  //   };
+
+  await createPeerConnection(MemberId);
 
   let offer = await peerConnection.createOffer();
   await peerConnection.setLocalDescription(offer);
@@ -103,5 +168,32 @@ let createOffer = async (MemberId) => {
     MemberId
   );
 };
+
+let createAnswer = async (MemberId, offer) => {
+  await createPeerConnection(MemberId);
+
+  await peerConnection.setRemoteDescription(offer);
+
+  let answer = await peerConnection.createAnswer();
+  await peerConnection.setLocalDescription(answer);
+
+  client.sendMessageToPeer(
+    { text: JSON.stringify({ type: 'answer', answer: answer }) },
+    MemberId
+  );
+};
+
+let addAnswer = async (answer) => {
+  if (!peerConnection.currentRemoteDescription) {
+    peerConnection.setRemoteDescription(answer);
+  }
+};
+
+let leaveChannel = async () => {
+  await channel.leave();
+  await client.logout();
+};
+
+window.addEventListener('beforeunload', leaveChannel);
 
 init();
