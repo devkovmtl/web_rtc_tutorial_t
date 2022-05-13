@@ -49,6 +49,9 @@ let joinStream = async () => {
   document
     .getElementById('streams__container')
     .insertAdjacentElement('beforeend', player);
+  document
+    .getElementById(`user-container-${uid}`)
+    .addEventListener('click', expandVideoFrame);
 
   // play video stream
   localTracks[1].play(`user-${uid}`);
@@ -72,6 +75,14 @@ let handleUserPublished = async (user, mediaType) => {
     document
       .getElementById('streams__container')
       .insertAdjacentElement('beforeend', player);
+    document
+      .getElementById(`user-container-${user.uid}`)
+      .addEventListener('click', expandVideoFrame);
+  }
+
+  if (displayFrame.style.display) {
+    player.style.height = '100px';
+    player.style.width = '100px';
   }
 
   if (mediaType === 'video') {
@@ -87,6 +98,14 @@ let handleUserPublished = async (user, mediaType) => {
 let handleUserLeft = async (user) => {
   delete remoteUsers[user.uid];
   document.getElementById(`user-container-${user.uid}`).remove();
+  if (userIdInDisplayFrame === `user-container-${user.uid}`) {
+    displayFrame.style.display = 'none'; // remove the main frame if user that is in it leave
+    let videoFrames = document.getElementsByClassName('video__container');
+    for (let i = 0; i < videoFrames.length; i++) {
+      videoFrames[i].style.height = '300px';
+      videoFrames[i].style.width = '300px';
+    }
+  }
 };
 
 joinRoomInit();
