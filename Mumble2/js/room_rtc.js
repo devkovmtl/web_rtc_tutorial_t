@@ -50,6 +50,7 @@ let joinRoomInit = async () => {
 
   channel.on('MemberJoined', handleMemberJoined);
   channel.on('MemberLeft', handleMemberLeft);
+  channel.on('channelMessage', handleChannelMessage);
 
   // add member
   getMembers();
