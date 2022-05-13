@@ -21,6 +21,11 @@ if (!roomId) {
   roomId = 'main';
 }
 
+let displayName = sessionStorage.getItem('display__name');
+if (!displayName) {
+  window.location = 'lobby.html';
+}
+
 // local tracks audio and video stream
 let localTracks = [];
 let remoteUsers = {}; // {'uid': []}
