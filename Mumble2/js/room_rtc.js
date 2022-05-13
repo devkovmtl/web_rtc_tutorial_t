@@ -29,6 +29,11 @@ let joinRoomInit = async () => {
   client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' }); // create client object
   await client.join(APP_ID, roomId, token, uid); // join room
 
+  client.on('user-published', handleUserPublished); // listen every time user published
+
+  // need to listen when user leave
+  client.on('user-left', handleUserLeft);
+
   //   await joinStream();
 };
 
@@ -47,6 +52,41 @@ let joinStream = async () => {
 
   // play video stream
   localTracks[1].play(`user-${uid}`);
+
+  // publish the tracks
+  await client.publish([localTracks[0], localTracks[1]]); // tracks[0] audio, tracks[1] video
+};
+
+// publish our stream and add event whenever another user joins
+let handleUserPublished = async (user, mediaType) => {
+  remoteUsers[user.uid] = user;
+  await client.subscribe(user, mediaType);
+  let player = document.getElementById(`user-container-${user.uid}`);
+  if (player === null) {
+    player = `<div class="video__container" id="user-container-${user.uid}">
+                    <div class="video-player" id="user-${user.uid}"></div>
+                </div>`;
+
+    // make sure this player does not exist in dom
+
+    document
+      .getElementById('streams__container')
+      .insertAdjacentElement('beforeend', player);
+  }
+
+  if (mediaType === 'video') {
+    user.videoTrack.play(`user-${user.uid}`);
+  }
+
+  if (mediaType === 'audio') {
+    user.audioTrack.play(`user-${user.uid}`);
+  }
+};
+
+// deal when user leave the room
+let handleUserLeft = async (user) => {
+  delete remoteUsers[user.uid];
+  document.getElementById(`user-container-${user.uid}`).remove();
 };
 
 joinRoomInit();

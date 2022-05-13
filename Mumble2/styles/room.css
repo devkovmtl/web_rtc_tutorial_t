@@ -174,7 +174,7 @@
 #stream__box {
   background-color: #3f434a;
   height: 60vh;
-  display: block;
+  display: none;
 }
 
 #streams__container {
