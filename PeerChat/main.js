@@ -17,6 +17,14 @@ let localStream; // local stream and microphone
 let remoteStream; // remote stream and speakers
 let peerConnection;
 
+let constraints = {
+  audio: true,
+  video: {
+    width: { min: 640, ideal: 1280, max: 1920 },
+    height: { min: 480, ideal: 720, max: 1080 },
+  },
+};
+
 // free stun server
 const servers = {
   iceServers: [
@@ -39,10 +47,7 @@ let init = async () => {
   client.on('MessageFromPeer', handleMessageFromPeer);
 
   // Get local Stream
-  localStream = await navigator.mediaDevices.getUserMedia({
-    audio: true,
-    video: true,
-  });
+  localStream = await navigator.mediaDevices.getUserMedia(constraints);
   // append the stream to video
   document.getElementById('user-1').srcObject = localStream;
 };
