@@ -89,8 +89,9 @@ let handleUserPublished = async (user, mediaType) => {
   }
 
   if (displayFrame.style.display) {
-    player.style.height = '100px';
-    player.style.width = '100px';
+    let videoFrame = document.getElementById(`user-container-${user.uid}`);
+    videoFrame.style.height = '100px';
+    videoFrame.style.width = '100px';
   }
 
   if (mediaType === 'video') {
@@ -115,5 +116,34 @@ let handleUserLeft = async (user) => {
     }
   }
 };
+
+let toggleCamera = async (event) => {
+  let button = event.currentTarget();
+
+  if (localTracks[1].muted) {
+    // if camera is muted
+    await localTracks[1].setMuted(false); // unmute camera
+    button.classList.add('active');
+  } else {
+    await localTracks[1].setItem(true); // mute camera
+    button.classList.remove('active');
+  }
+};
+
+let toggleMic = async (event) => {
+  let button = event.currentTarget();
+
+  if (localTracks[0].muted) {
+    // if mic is muted
+    await localTracks[0].setMuted(false); // unmute mic
+    button.classList.add('active');
+  } else {
+    await localTracks[0].setItem(true); // mute mic
+    button.classList.remove('active');
+  }
+};
+
+document.getElementById('camera-btn').addEventListener('click', toggleCamera);
+document.getElementById('mic-btn').addEventListener('click', toggleCamera);
 
 joinRoomInit();
