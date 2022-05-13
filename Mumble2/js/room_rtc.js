@@ -11,6 +11,9 @@ if (uid) {
 let token = null; // token for agora
 let client; // core interface for rtm store user info
 
+let rtmClient;
+let channel;
+
 // get room id from url param
 // room.html?room=243
 const queryString = window.location.search;
@@ -35,6 +38,22 @@ let localScreenTracks;
 let sharingScreen = false;
 
 let joinRoomInit = async () => {
+  // connect to real time messaging agora
+  rtmClient = await AgoraRTM.createInstance(APP_ID);
+  await rtmClient.login({ uid, token });
+
+  // pass an attribute when we connect to pass username
+  await rtmClient.addOrUpdateLocalUserAttributes({ name: displayName });
+
+  channel = await rtmClient.createChannel(roomId);
+  await channel.join();
+
+  channel.on('MemberJoined', handleMemberJoined);
+  channel.on('MemberLeft', handleMemberLeft);
+
+  // add member
+  getMembers();
+
   client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' }); // create client object
   await client.join(APP_ID, roomId, token, uid); // join room
 
