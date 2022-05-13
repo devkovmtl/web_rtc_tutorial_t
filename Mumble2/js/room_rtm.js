@@ -4,6 +4,9 @@ let handleMemberJoined = async (MemberId) => {
 
   let members = await channel.getMembers();
   updateMemberTotal(members);
+
+  let { name } = await rtmClient.getUserAttributeByKeys(MemberId, ['name']);
+  addBotMessageToDOM(`Welcome to the room ${name}! 👋`);
 };
 
 let addMemberToDom = async (MemberId) => {
@@ -29,7 +32,10 @@ let handleMemberLeft = async (MemberId) => {
 
 let removeMemberFromDom = async (MemberId) => {
   let memberWrapper = document.getElementById(`member__${MemberId}__wrapper`);
+  let name = memberWrapper.getElementsByClassName('member_name')[0].textContent;
   memberWrapper.remove();
+
+  addBotMessageToDOM(`${name} has left the room.`);
 };
 
 let getMembers = async () => {
@@ -46,6 +52,17 @@ let addMessageToDOM = async (name, message) => {
     <strong class="message__author">${name}</strong>
     <p class="message__text">${message}</p>
 </div>`;
+
+  messagesWrapper.insertAdjacentHTML('beforeend', newMessage);
+};
+
+let addBotMessageToDOM = async (botMessage) => {
+  let messagesWrapper = document.getElementById('messages');
+  let newMessage = `<div class="message__body__bot">
+    <strong class="message__author__bot">🤖 Mumble Bot</strong>
+    <p class="message__text__bot">${botMessage}</p>
+</div>
+    `;
 
   messagesWrapper.insertAdjacentHTML('beforeend', newMessage);
 };
